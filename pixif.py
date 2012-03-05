@@ -29,7 +29,9 @@ EXIF_DATETIME_TAGS  = ( 'DateTimeOriginal', 'DateTimeDigitized', 'DateTime' )
 # NOTE: similar to EXIF_DATETIME_TAGS, will attempt to parse datetime using formats listed in order until valid
 EXIF_DATETIME_STRF  = ( '%Y:%m:%d %H:%M:%S', )
 
-DATETIME_TUPLE_TAGS    = ( 'year', 'month', 'day', 'hour', 'minute', 'second', 'weekday', 'yearday' )
+DATETIME_TUPLE_TAGS    = (
+    '%Y %m %d %H %M %S %w %j', ( 'year', 'month', 'day', 'hour', 'minute', 'second', 'weekday', 'yearday' )
+)
 
 def read_config( filename ):
     # TODO
@@ -57,7 +59,7 @@ class PixifImage:
                 # skip thumbnails
                 continue
             try:
-                # format of tag is IFD name followed by tag name
+                # format of tag is IFD name followed by tag name, e.g. 'EXIF DateTimeOriginal', 'Image Orientation'
                 # drop the IFD name and skip if duplicate
                 t = tag.split()[1]
                 if t not in self.tags:
@@ -86,9 +88,9 @@ class PixifImage:
                     pass
 
         if self.datetime:
-            timetuple   = self.datetime.timetuple()
-            for i,dt_tag in enumerate( DATETIME_TUPLE_TAGS ):
-                self.tags[dt_tag]   = timetuple[i]
+            date_parts   = self.datetime.strftime( DATETIME_TUPLE_TAGS[0] ).split()
+            for i,dt_val in enumerate( date_parts ):
+                self.tags[ DATETIME_TUPLE_TAGS[1][i] ]   = dt_val
 
     def as_dict( self ):
         return self.tags
