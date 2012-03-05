@@ -8,8 +8,10 @@
 
 import EXIF
 
-import datetime
 import os
+import shutil
+import datetime
+
 
 # for testing purposes; eventually move to actual config file
 TEST_CONFIG = {
@@ -96,17 +98,57 @@ class PixifImage:
         return self.tags
 
 class PixifCollection:
-    def __init__( self, src, debug=False ):
-        self.source = src
+    def __init__( self, src, dst, saveas, debug=False ):
+        self.src    = src
+        self.dst    = dst
+        self.saveas = saveas
         self.debug  = debug
+        self.images = None
         self.collect()
 
-    def collect( self, src = None ):
-        if src:
-            self.source = src
+    # TODO: may not want to collect files only to re-loop through them in instructions
+    # perhaps overload collect() so that it functions as a generator if self.images is None
+    def collect( self ):
+        # files in source may not all contain EXIF data
+        potentials  = get_files( self.src )
+        self.images = files_to_pixif( potentials, debug=self.debug )
 
-        self.files  = get_files( self.source )
-        self.images = files_to_pixif( self.files, debug=self.debug )
+        return self.images
+
+    def instructions( self ):
+        for i in self.images:
+            yield ( i, os.path.join( self.dst, self.saveas.format( **i.as_dict() ) ) )
+
+    def copy( self ):
+        return self._operate( shutil.copy2 )
+
+    def move( self ):
+        return self._operate( shutil.move )
+
+    def _operate( self, operator ):
+        # TODO: need to add an overwrite option; currently files are overwritten
+        logs  = []
+        for image, dst_file in self.instructions():
+            try:
+                prepare_destination( dst_file )
+            except OSError:
+                # hopefully issue is that destination root already exists
+                pass
+
+            try:
+                operator( image.filename, dst_file )
+                log = '(success) processed image using %s' % operator
+            except OSError,e:
+                log = e
+
+        return logs
+
+class PixifLogEntry:
+    def __init__( self, text, image, dst ):
+        self.error      = error
+        self.image      = image
+        self.dst        = dst
+        self.datetime   = datetime.datetime.today()
 
 def get_files( src ):
     files   = []
@@ -125,6 +167,10 @@ def files_to_pixif( files, debug=False ):
             continue
     return pixifs
 
+def prepare_destination( filename ):
+    head,tail   = os.path.split( filename )
+    os.makedirs( head )
+
 if __name__ == '__main__':
 
     #photo  = 'test/DSC_1088.jpg'
@@ -132,9 +178,14 @@ if __name__ == '__main__':
     #saveas = os.path.join( TEST_CONFIG['dst'], TEST_CONFIG['saveas'].format( **pixif_img.as_dict() ) )
     #print saveas
 
-    pixif_c = PixifCollection( TEST_CONFIG['src'], debug=True )
-    print '\nfiles:'
-    for f in pixif_c.files: print f
+    pixif_c = PixifCollection( TEST_CONFIG['src'], TEST_CONFIG['dst'], TEST_CONFIG['saveas'], debug=True )
+    #print '\nfiles:'
+    #for i in pixif_c.images: print i.filename
 
-    print '\nimages:'
-    for i in pixif_c.images: print '[%s] move to [%s]' % ( i.filename, os.path.join( TEST_CONFIG['dst'], TEST_CONFIG['saveas'].format( **i.as_dict() ) ) )
+    #print '\nimages:'
+    #for i in pixif_c.images: print '[%s] move to [%s]' % ( i.filename, os.path.join( TEST_CONFIG['dst'], TEST_CONFIG['saveas'].format( **i.as_dict() ) ) )
+
+    #print '\ndestinations'
+    #for d in pixif_c.instructions(): print d
+    logs    = pixif_c.move()
+    print logs
