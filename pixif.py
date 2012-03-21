@@ -1,26 +1,14 @@
-
-# basic algorithm
-#   - read config file
-#   - get photos (if any) from src (recursively)
-#   - read EXIF data and build objects with it
-#   - check dst exists else make dst
-#   - loop through photos, create dst directories, move (or copy) photos
+# Pixif: Picture Transfer <https://github.com/dgilland/pixif>
+# Author: Derrick Gilland <https://github.com/dgilland>
+# License: Unlicense <http://unlicense.org/>
+# Version: 0.0
 
 import EXIF
 
 import os
 import shutil
 import datetime
-
-
-# for testing purposes; eventually move to actual config file
-TEST_CONFIG = {
-    #'src':     '/Users/dgilland/Dropbox/Camera Uploads/',
-    #'dst':     '/Users/dgilland/Pictures/Picasa/',
-    'src':      'test',
-    'dst':      'test-out',
-    'saveas':   '{year}/{year}-{month}-{day}/{name}',
-}
+import ConfigParser
 
 # datetime tags to use for getting datetime of photo
 # NOTE: will try each tag until a valid datetime is extracted
@@ -36,8 +24,35 @@ DATETIME_TUPLE_TAGS    = (
 )
 
 def read_config( filename ):
-    # TODO
-    return TEST_CONFIG
+    defaults    = {
+        'log':          True,
+        'overwrite':    False,
+        'enabled':      True
+    }
+
+    booleans    = [ 'log', 'overwrite', 'enabled' ]
+
+    config  = ConfigParser.RawConfigParser()
+    config.read( filename )
+
+    config_dict = dict()
+    for s in config.sections():
+        config_dict[s]  = dict()
+
+        for name,_ in config.items(s):
+            if config.has_option( s, name ):
+                if name in booleans:
+                    value   = config.getboolean( s, name )
+                else:
+                    value   = config.get( s, name )
+            elif name in defaults:
+                value   = defaults[ name ]
+            else:
+                raise ConfigParser.NoOptionError
+
+            config_dict[s][name]    = value
+
+    return config_dict
 
 class PixifImage:
     def __init__( self, filename, debug=False ):
