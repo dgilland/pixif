@@ -23,37 +23,6 @@ DATETIME_TUPLE_TAGS    = (
     '%Y %m %d %H %M %S %w %j', ( 'Year', 'Month', 'Day', 'Hour', 'Minute', 'Second', 'Weekday', 'Yearday' )
 )
 
-def read_config( filename ):
-    defaults    = {
-        'log':          True,
-        'overwrite':    False,
-        'enabled':      True
-    }
-
-    booleans    = [ 'log', 'overwrite', 'enabled' ]
-
-    config  = ConfigParser.RawConfigParser()
-    config.read( filename )
-
-    config_dict = dict()
-    for s in config.sections():
-        config_dict[s]  = dict()
-
-        for name,_ in config.items(s):
-            if config.has_option( s, name ):
-                if name in booleans:
-                    value   = config.getboolean( s, name )
-                else:
-                    value   = config.get( s, name )
-            elif name in defaults:
-                value   = defaults[ name ]
-            else:
-                raise ConfigParser.NoOptionError
-
-            config_dict[s][name]    = value
-
-    return config_dict
-
 class PixifImage:
     def __init__( self, filename, debug=False ):
         self.debug  = debug
@@ -232,17 +201,95 @@ def prepare_destination( filename ):
     head,tail   = os.path.split( filename )
     os.makedirs( head )
 
+
+def read_config_file( filename, booleans ):
+    config  = ConfigParser.RawConfigParser()
+    config.read( filename )
+
+    config_dict = dict()
+    for s in config.sections():
+        config_dict[s]  = dict()
+
+        for name,_ in config.items(s):
+            if config.has_option( s, name ):
+                if name in booleans:
+                    value   = config.getboolean( s, name )
+                else:
+                    value   = config.get( s, name )
+
+            config_dict[s][name]    = value
+
+    return config_dict
+
+def read_config_opts( opts, booleans ):
+    config  = dict( section=dict() )
+    for o,opt in opts.iteritems():
+        new_key = o.replace( '--', '' )
+
+        if new_key in booleans:
+            config['section'][new_key] = True
+        else:
+            config['section'][new_key] = opt
+
+    return config
+
+def config_merge_defaults( config ):
+    defaults    = {
+        'method':       'copy',
+        'log':          False,
+        'overwrite':    False,
+        'enabled':      True
+    }
+
+    for c in config:
+        config[c]   = dict( defaults.items() + config[c].items() )
+
 if __name__ == '__main__':
 
     import sys
+    import getopt
 
     try:
-        args        = sys.argv[1:]
-        config_file = args[0]
+        opts, args  = getopt.getopt( sys.argv[1:], 's:d:a:m:lo', [ 'src=', 'dst=', 'saveas=', 'method=', 'log', 'overwrite' ] )
+        booleans    = [ 'log', 'overwrite', 'enabled' ]
 
-        config      = read_config( config_file )
-    except Exception,e:
-        print 'error:', e
+        if args:
+            config_file = args[0]
+            config  = read_config_file( config_file, booleans )
+        else:
+            config_file = ''
+            opt_map = {
+                '-s':   'src',
+                '-d':   'dst',
+                '-a':   'saveas',
+                '-m':   'method',
+                '-l':   'log',
+                '-o':   'overwrite',
+            }
+
+            opts_dict   = dict( opts )
+            opts        = dict()
+            for o,opt in opts_dict.iteritems():
+                if o in opt_map:
+                    opts[ opt_map[o] ]  = opt
+
+            config  = read_config_opts( opts, booleans )
+
+        config_merge_defaults( config )
+
+        required    = set( [ 'src', 'dst', 'saveas', 'method' ] )
+        opts_valid  = True
+        for c,conf in config.iteritems():
+            if len( required - set(conf.keys()) ) > 0:
+                opts_valid  = False
+                break
+
+        if not opts_valid:
+            print 'error:', 'missing required options'
+            sys.exit()
+
+    except getopt.GetoptError:
+        print 'error:', 'incorrect usage'
     else:
         logger_dir,_    = os.path.split( config_file )
         logger_file     = os.path.join( logger_dir, 'pixif.log' )
