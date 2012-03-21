@@ -105,10 +105,12 @@ class PixifImage:
         return self.tags
 
 class PixifCollection:
-    def __init__( self, src, dst, saveas, debug=False ):
+    def __init__( self, src, dst, saveas, overwrite=True, logger=None, debug=False ):
         self.src    = src
         self.dst    = dst
         self.saveas = saveas
+        self.overwrite  = overwrite
+        self.logger = logger
         self.debug  = debug
         self.images = None
         self.collect()
@@ -134,28 +136,64 @@ class PixifCollection:
 
     def _operate( self, operator ):
         # TODO: need to add an overwrite option; currently files are overwritten
-        logs  = []
         for image, dst_file in self.instructions():
+            if self.overwrite or not os.path.exists( dst_file ):
+                try:
+                    prepare_destination( dst_file )
+                except OSError:
+                    # destination root already exists
+                    pass
+
+                log = ''
+                try:
+                    operator( image.filename, dst_file )
+                    log = '(success) processed image using %s' % operator
+                except OSError,e:
+                    log = e
+            else:
+                log = '(warning) could not process image because file already exists'
+
+            if log:
+                self.logger.append( log, image, dst_file )
+
+class PixifLogger:
+    def __init__( self, section, filename_out ):
+        self.section        = section
+        self.filename_out   = filename_out
+        self.clear()
+
+    def append( self, text, image, dst ):
+        self.logs.append( PixifLogEntry( text, image, dst, self.section ) )
+
+    def clear( self ):
+        self.logs   = []
+
+    def write( self, filename_out=None ):
+        if self.logs:
+            f_out   = filename_out if filename_out else self.filename_out
             try:
-                prepare_destination( dst_file )
-            except OSError:
-                # hopefully issue is that destination root already exists
+                f_out   = open( f_out, 'ab' )
+            except IOError:
                 pass
+            else:
+                for l in self.logs:
+                    try:
+                        f_out.write( str(l) + '\n' )
+                    except IOError:
+                        pass
 
-            try:
-                operator( image.filename, dst_file )
-                log = '(success) processed image using %s' % operator
-            except OSError,e:
-                log = e
-
-        return logs
+                f_out.close()
 
 class PixifLogEntry:
-    def __init__( self, text, image, dst ):
-        self.error      = error
+    def __init__( self, text, image, dst, section ):
+        self.text       = text
         self.image      = image
         self.dst        = dst
+        self.section    = section
         self.datetime   = datetime.datetime.today()
+
+    def __repr__( self ):
+        return '\t'.join( [ self.datetime.isoformat(' '), self.section, self.text, self.image.filename, self.dst ] )
 
 def get_files( src ):
     files   = []
@@ -172,6 +210,7 @@ def files_to_pixif( files, debug=False ):
             if debug:
                 print 'files_to_pixif: (error) %s for [%s]' % ( e, f )
             continue
+
     return pixifs
 
 def prepare_destination( filename ):
