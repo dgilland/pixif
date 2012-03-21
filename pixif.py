@@ -32,7 +32,7 @@ EXIF_DATETIME_TAGS  = ( 'DateTimeOriginal', 'DateTimeDigitized', 'DateTime' )
 EXIF_DATETIME_STRF  = ( '%Y:%m:%d %H:%M:%S', )
 
 DATETIME_TUPLE_TAGS    = (
-    '%Y %m %d %H %M %S %w %j', ( 'year', 'month', 'day', 'hour', 'minute', 'second', 'weekday', 'yearday' )
+    '%Y %m %d %H %M %S %w %j', ( 'Year', 'Month', 'Day', 'Hour', 'Minute', 'Second', 'Weekday', 'Yearday' )
 )
 
 def read_config( filename ):
