@@ -34,7 +34,7 @@ Currently, an `ini` configuration file is required to use `pixif.py`, but comman
 
 ## Configuration File Structure
 
-_See [sample-config.ini](sample-config.ini)._
+_See sample-config.ini._
 
     ; section titles names are arbitrary but will be used as id for log entries
     [alpha]
