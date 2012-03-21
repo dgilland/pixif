@@ -234,19 +234,38 @@ def prepare_destination( filename ):
 
 if __name__ == '__main__':
 
-    #photo  = 'test/DSC_1088.jpg'
-    #pixif_img  = PixifImage( photo )
-    #saveas = os.path.join( TEST_CONFIG['dst'], TEST_CONFIG['saveas'].format( **pixif_img.as_dict() ) )
-    #print saveas
+    import sys
 
-    pixif_c = PixifCollection( TEST_CONFIG['src'], TEST_CONFIG['dst'], TEST_CONFIG['saveas'], debug=True )
-    #print '\nfiles:'
-    #for i in pixif_c.images: print i.filename
+    try:
+        args        = sys.argv[1:]
+        config_file = args[0]
 
-    #print '\nimages:'
-    #for i in pixif_c.images: print '[%s] move to [%s]' % ( i.filename, os.path.join( TEST_CONFIG['dst'], TEST_CONFIG['saveas'].format( **i.as_dict() ) ) )
+        config      = read_config( config_file )
+    except Exception,e:
+        print 'error:', e
+    else:
+        logger_dir,_    = os.path.split( config_file )
+        logger_file     = os.path.join( logger_dir, 'pixif.log' )
 
-    #print '\ndestinations'
-    #for d in pixif_c.instructions(): print d
-    logs    = pixif_c.move()
-    print logs
+        for c,cfg in config.iteritems():
+            if not cfg['enabled']:
+                continue
+
+            logger  = PixifLogger( c, logger_file )
+
+            try:
+                pixif_c = PixifCollection( cfg['src'], cfg['dst'], cfg['saveas'], cfg['overwrite'], logger=logger )
+
+                if cfg['method'] == 'copy':
+                    pixif_c.copy()
+                elif cfg['method'] == 'move':
+                    pixif_c.move()
+
+            except Exception,e:
+                print 'error:', e
+
+            logger.write()
+            logger.clear()
+
+    sys.exit()
+
