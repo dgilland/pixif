@@ -1,7 +1,7 @@
 # Pixif: Picture Transfer <https://github.com/dgilland/pixif>
 # Author: Derrick Gilland <https://github.com/dgilland>
 # License: Unlicense <http://unlicense.org/>
-# Version: 0.0
+# Version: 0.1
 
 import EXIF
 
