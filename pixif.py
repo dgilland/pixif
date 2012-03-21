@@ -48,10 +48,17 @@ class PixifImage:
             raise Exception( 'no EXIF data' )
 
         self.filename   = filename
-        self.tags       = dict( name=os.path.basename( filename ) )
+        self.tags       = {
+            'Name':         os.path.basename( filename ),
+            'Extension':    os.path.splitext( filename )[1]
+        }
 
         self.get_tags()
         self.get_datetime()
+        self.file.close()
+
+    def __repr__( self ):
+        return '<PixifImage at %s>' % ( self.filename )
 
     def get_tags( self ):
         tags    = self.exif.keys()
@@ -68,7 +75,7 @@ class PixifImage:
                     # use string value for tag value for use with filenames
                     self.tags[t]  = str( self.exif[tag] )
             except Exception:
-                # something went wrong but what can we do; tag/tag value not usable
+                # something went wrong but what can we do; tag value not usable
                 if self.debug:
                     print 'PixifImage: (warning) could not get tag [%s] for [%s]' % ( tag, self.filename )
                 pass
