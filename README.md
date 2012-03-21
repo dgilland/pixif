@@ -47,29 +47,29 @@ Full invocation using long options:
 
 ## Options
 
-### -s, --src (required)
+### -s, --src [required]
 
 String. Source file path.
 
-### -d, --dst (required)
+### -d, --dst [required]
 
 String. Destination file path.
 
-### -a, --saveas (required)
+### -a, --saveas [required]
 
-String. Format string syntax.
+String. Format string syntax with EXIF tag names delimited by braces `{}`, e.g., `{Year}/{Year}-{Month}-{Day}/{Name}`. *See EXIF.py's EXIF_TAGS constant for full list.*
 
-### -m, --method (optional, default: copy)
+### -m, --method [optional, default: copy]
 
 String. Acceptable values: `copy` or `move`.
 
-### -l, --log (optional, default: False)
+### -l, --log [optional, default: False]
 
-Boolean. Enabled logging. Optional.
+Boolean. Enable logging.
 
-### -o, --overwrite (optional, default: False)
+### -o, --overwrite [optional, default: False]
 
-Boolean. Overwrite existing photos when transferred. Optional.
+Boolean. Overwrite existing photos when transferred.
 
 ## Configuration File Structure
 
