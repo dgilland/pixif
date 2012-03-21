@@ -16,6 +16,8 @@ Derrick Gilland
 
 ## Requirements
 
+- Python 2.6+
+
 # Acknowledgments
 
 Special thanks to [ianare](http://ianare.users.sourceforge.net) for developing [EXIF](http://sourceforge.net/projects/exif-py), the EXIF python module used in this project.
@@ -26,11 +28,48 @@ See LICENSE file.
 
 # Documentation
 
-Currently, an `ini` configuration file is required to use `pixif.py`, but command-line options are planned for future releases.
+## Usage
 
-## Command Line Usage
+Pixif can be run from the command-line using 2 methods:
 
-    python pixif.py /path/to/config/file.ini
+1. Command-line options
+2. Configuration file
+
+## Command-Line Options
+
+Full invocation using short options:
+
+    python pixif.py -s /path/to/source -d /path/to/destination -a {EXIF}/{Tag}/{Save}-{Structure} -m method -l -o
+
+Full invocation using long options:
+
+    python pixif.py --src /path/to/source --dst /path/to/destination --saveas {EXIF}/{Tag}/{Save}-{Structure} --method method --log --overwrite
+
+## Options
+
+### -s, --src (required)
+
+String. Source file path.
+
+### -d, --dst (required)
+
+String. Destination file path.
+
+### -a, --saveas (required)
+
+String. Format string syntax.
+
+### -m, --method (optional, default: copy)
+
+String. Acceptable values: `copy` or `move`.
+
+### -l, --log (optional, default: False)
+
+Boolean. Enabled logging. Optional.
+
+### -o, --overwrite (optional, default: False)
+
+Boolean. Overwrite existing photos when transferred. Optional.
 
 ## Configuration File Structure
 
