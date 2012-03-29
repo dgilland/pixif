@@ -126,11 +126,11 @@ Below is an example setup for using Cron to schedule periodic photo transfers.
 
 1. Edit Cron:
 
-    $ crontab -e
+    `$ crontab -e`
 
 2. Set process schedule for every 60 minutes:
 
-    \*/60 \* \* \* \* python /Users/username/projects/pixif/pixif.py /Users/username/Dropbox/Camera\\ Uploads/pixif.ini
+    `*/60 * * * * python /Users/username/projects/pixif/pixif.py /Users/username/Dropbox/Camera\ Uploads/pixif.ini`
 
 3. Save Cron.
 
@@ -144,5 +144,5 @@ Replace `/Users/username/Dropbox/Camera\ Uploads/pixif.ini` in step `2` above wi
 
 So that the full crontab entry is:
 
-    \*/60 \* \* \* \* python /Users/username/projects/pixif/pixif.py -src /Users/username/Dropbox/Camera\ Uploads/ -dst /Users/username/Pictures/ -a {Year}/{Year}-{Month}-{Day}/{Name} -m move -l
+    */60 * * * * python /Users/username/projects/pixif/pixif.py -src /Users/username/Dropbox/Camera\ Uploads/ -dst /Users/username/Pictures/ -a {Year}/{Year}-{Month}-{Day}/{Name} -m move -l
 
