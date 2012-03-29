@@ -39,11 +39,11 @@ Pixif can be run from the command-line using 2 methods:
 
 Full invocation using short options:
 
-    python pixif.py -s /path/to/source -d /path/to/destination -a {EXIF}/{Tag}/{Save}-{Structure} -m method -l -o
+    $ python pixif.py -s /path/to/source -d /path/to/destination -a {EXIF}/{Tag}/{Save}-{Structure} -m method -l -o
 
 Full invocation using long options:
 
-    python pixif.py --src /path/to/source --dst /path/to/destination --saveas {EXIF}/{Tag}/{Save}-{Structure} --method method --log --overwrite
+    $ python pixif.py --src /path/to/source --dst /path/to/destination --saveas {EXIF}/{Tag}/{Save}-{Structure} --method method --log --overwrite
 
 ## Options
 
@@ -57,7 +57,9 @@ String. Destination file path.
 
 ### -a, --saveas [required]
 
-String. Format string syntax with EXIF tag names delimited by braces `{}`, e.g., `{Year}/{Year}-{Month}-{Day}/{Name}`. *See EXIF.py's EXIF_TAGS constant for full list.*
+String. Format string syntax with EXIF tag names delimited by braces `{}`, e.g., `{Year}/{Year}-{Month}-{Day}/{Name}`.
+
+*See EXIF.py's EXIF_TAGS constant for full list.*
 
 ### -m, --method [optional, default: copy]
 
@@ -102,3 +104,45 @@ _See sample-config.ini._
 
     ; enabled: true/false enables/disables this section
     enabled=true
+
+## Scheduled Transfers Using Cron
+
+Below is an example setup for using Cron to schedule periodic photo transfers.
+
+### Configuration File
+
+**/Users/username/Dropbox/Camera Uploads/pixif.ini** contents:
+
+    [dropbox-uploads]
+    src=/Users/username/Dropbox/Camera Uploads/
+    dst=/Users/username/Pictures/
+    saveas={Year}/{Year}-{Month}-{Day}/{Name}
+    method=move
+    log=true
+    overwrite=false
+    enabled=true
+
+### Cron Setup
+
+1. Edit Cron:
+
+    $ crontab -e
+
+2. Set process schedule for every 60 minutes:
+
+    \*/60 \* \* \* \* python /Users/username/projects/pixif/pixif.py /Users/username/Dropbox/Camera\\ Uploads/pixif.ini
+
+3. Save Cron.
+
+After this process runs for the first time, `/Users/username/Dropbox/Camera Uploads/pixif.log` will contain a log of all pictures transferred using pixif.
+
+### Equivalent Setup without Configuration File
+
+Replace `/Users/username/Dropbox/Camera\ Uploads/pixif.ini` in step `2` above with:
+
+    -src /Users/username/Dropbox/Camera\ Uploads/ -dst /Users/username/Pictures/ -a {Year}/{Year}-{Month}-{Day}/{Name} -m move -l
+
+So that the full crontab entry is:
+
+    \*/60 \* \* \* \* python /Users/username/projects/pixif/pixif.py -src /Users/username/Dropbox/Camera\ Uploads/ -dst /Users/username/Pictures/ -a {Year}/{Year}-{Month}-{Day}/{Name} -m move -l
+
